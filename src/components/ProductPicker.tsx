@@ -1,8 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProductForPicker } from "@/lib/product-types";
+import {
+  getNewProductHref,
+  type ProductReturnTarget
+} from "@/lib/product-return";
 
 type ScannerControls = {
   stop?: () => void;
@@ -16,6 +21,7 @@ type ProductPickerProps = {
   placeholder?: string;
   initialProductId?: string;
   showStock?: boolean;
+  createProductReturnTo?: ProductReturnTarget;
   onChange?: (product: ProductForPicker | null) => void;
 };
 
@@ -57,12 +63,14 @@ export function ProductPicker({
   placeholder = "Название, SKU, offer ID, штрихкод или категория",
   initialProductId,
   showStock = true,
+  createProductReturnTo = "products",
   onChange
 }: ProductPickerProps) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(initialProductId || "");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanError, setScanError] = useState("");
+  const [unknownScannedBarcode, setUnknownScannedBarcode] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<ScannerControls | null>(null);
 
@@ -92,6 +100,7 @@ export function ProductPicker({
   const selectProduct = useCallback((product: ProductForPicker) => {
     setSelectedId(product.id);
     setQuery(product.name);
+    setUnknownScannedBarcode("");
   }, []);
 
   const handleScannedCode = useCallback((rawCode: string) => {
@@ -116,6 +125,7 @@ export function ProductPicker({
       return;
     }
 
+    setUnknownScannedBarcode(code);
     setScanError(
       `Код ${code} считан, но точного совпадения нет. Проверьте список ниже.`
     );
@@ -203,6 +213,7 @@ export function ProductPicker({
         onChange={(event) => {
           setQuery(event.target.value);
           setSelectedId("");
+          setUnknownScannedBarcode("");
         }}
       />
 
@@ -256,9 +267,24 @@ export function ProductPicker({
         </div>
 
         {visibleProducts.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
-            Ничего не найдено. Попробуйте часть названия, SKU, offer ID,
-            категорию или штрихкод.
+          <div className="space-y-3 rounded-lg border border-dashed border-slate-300 bg-white p-4">
+            <div>
+              <div className="font-semibold text-ink">Товар не найден</div>
+              <p className="mt-1 text-sm text-slate-500">
+                {unknownScannedBarcode
+                  ? `Сохранить barcode ${unknownScannedBarcode} в новой карточке товара.`
+                  : "Можно сразу создать минимальную карточку и вернуться к этой операции."}
+              </p>
+            </div>
+            <Link
+              className="primary-button"
+              href={getNewProductHref(createProductReturnTo, {
+                barcode: unknownScannedBarcode,
+                name: unknownScannedBarcode ? undefined : query
+              })}
+            >
+              Создать товар
+            </Link>
           </div>
         ) : (
           <div className="max-h-80 space-y-2 overflow-auto pr-1">
@@ -290,6 +316,27 @@ export function ProductPicker({
           </div>
         )}
       </div>
+
+      {unknownScannedBarcode && !selectedProduct && visibleProducts.length > 0 ? (
+        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div>
+            <div className="font-semibold text-amber-950">
+              Товар не найден
+            </div>
+            <p className="mt-1 text-sm text-amber-900">
+              Сохранить barcode {unknownScannedBarcode} в новой карточке товара.
+            </p>
+          </div>
+          <Link
+            className="primary-button"
+            href={getNewProductHref(createProductReturnTo, {
+              barcode: unknownScannedBarcode
+            })}
+          >
+            Создать товар
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

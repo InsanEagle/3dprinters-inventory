@@ -4,7 +4,16 @@ import {
   getRecentProductsWithStock
 } from "@/lib/stock";
 
-export default async function CheckStockPage() {
+type CheckStockPageProps = {
+  searchParams?: Promise<{
+    productId?: string;
+  }>;
+};
+
+export default async function CheckStockPage({
+  searchParams
+}: CheckStockPageProps) {
+  const params = await searchParams;
   const [products, recentProducts] = await Promise.all([
     getAllProductsWithStock(),
     getRecentProductsWithStock()
@@ -20,7 +29,11 @@ export default async function CheckStockPage() {
       </div>
 
       <div className="panel p-4">
-        <CheckStockPanel products={products} recentProducts={recentProducts} />
+        <CheckStockPanel
+          initialProductId={params?.productId}
+          products={products}
+          recentProducts={recentProducts}
+        />
       </div>
     </div>
   );

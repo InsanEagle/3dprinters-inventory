@@ -4,6 +4,10 @@ import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireEmployee } from "@/lib/auth";
+import {
+  getProductReturnPath,
+  parseProductReturnTarget
+} from "@/lib/product-return";
 import { prisma } from "@/lib/prisma";
 
 function cleanText(value: FormDataEntryValue | null) {
@@ -32,7 +36,14 @@ export async function createProductAction(
   const ozonOfferId = cleanText(formData.get("ozonOfferId"));
   const category = cleanText(formData.get("category"));
   const searchAliases = cleanText(formData.get("searchAliases"));
-  const barcodes = parseBarcodes(cleanText(formData.get("barcodes")));
+  const returnTo =
+    parseProductReturnTarget(cleanText(formData.get("returnTo"))) ||
+    "products";
+  const barcodes = parseBarcodes(
+    [cleanText(formData.get("barcode")), cleanText(formData.get("barcodes"))]
+      .filter(Boolean)
+      .join("\n")
+  );
 
   if (!name || !internalSku || !category) {
     return {
@@ -41,8 +52,31 @@ export async function createProductAction(
     };
   }
 
+  const existingBarcode =
+    barcodes.length > 0
+      ? await prisma.barcode.findFirst({
+          where: {
+            value: {
+              in: barcodes
+            }
+          },
+          select: {
+            value: true
+          }
+        })
+      : null;
+
+  if (existingBarcode) {
+    return {
+      status: "error",
+      message: `Штрихкод ${existingBarcode.value} уже привязан к другому товару.`
+    };
+  }
+
+  let productId = "";
+
   try {
-    await prisma.product.create({
+    const product = await prisma.product.create({
       data: {
         name,
         internalSku,
@@ -56,6 +90,7 @@ export async function createProductAction(
         }
       }
     });
+    productId = product.id;
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -72,5 +107,9 @@ export async function createProductAction(
 
   revalidatePath("/products");
   revalidatePath("/");
-  redirect("/products");
+  revalidatePath("/stock/add");
+  revalidatePath("/stock/remove");
+  revalidatePath("/stock/check");
+  revalidatePath("/stock/correction");
+  redirect(getProductReturnPath(returnTo, productId));
 }

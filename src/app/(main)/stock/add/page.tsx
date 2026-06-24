@@ -5,7 +5,14 @@ import {
   getRecentProductsWithStock
 } from "@/lib/stock";
 
-export default async function AddStockPage() {
+type AddStockPageProps = {
+  searchParams?: Promise<{
+    productId?: string;
+  }>;
+};
+
+export default async function AddStockPage({ searchParams }: AddStockPageProps) {
+  const params = await searchParams;
   const [products, recentProducts] = await Promise.all([
     getAllProductsWithStock(),
     getRecentProductsWithStock()
@@ -23,6 +30,7 @@ export default async function AddStockPage() {
       <div className="panel p-4">
         <StockMovementForm
           action={addStockAction}
+          initialProductId={params?.productId}
           mode="add"
           products={products}
           recentProducts={recentProducts}

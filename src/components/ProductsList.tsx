@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { ProductForPicker } from "@/lib/product-types";
+import { getNewProductHref } from "@/lib/product-return";
 
 type ProductsListProps = {
   products: ProductForPicker[];
@@ -88,12 +89,28 @@ export function ProductsList({ products }: ProductsListProps) {
       </div>
 
       {filteredProducts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
-          Ничего не найдено.
+        <div className="space-y-3 rounded-lg border border-dashed border-slate-300 bg-white p-4 text-center">
+          <div>
+            <div className="font-semibold text-ink">Товар не найден</div>
+            <p className="mt-1 text-sm text-slate-500">
+              Создайте минимальную карточку и вернитесь к списку.
+            </p>
+          </div>
+          <Link
+            className="primary-button"
+            href={getNewProductHref("products", {
+              name: query
+            })}
+          >
+            Создать товар
+          </Link>
         </div>
       ) : null}
 
-      <Link className="secondary-button" href="/products/new">
+      <Link
+        className="secondary-button"
+        href={getNewProductHref("products")}
+      >
         Добавить новый товар
       </Link>
     </div>

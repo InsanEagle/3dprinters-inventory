@@ -6,7 +6,16 @@ import {
   getRecentProductsWithStock
 } from "@/lib/stock";
 
-export default async function RemoveStockPage() {
+type RemoveStockPageProps = {
+  searchParams?: Promise<{
+    productId?: string;
+  }>;
+};
+
+export default async function RemoveStockPage({
+  searchParams
+}: RemoveStockPageProps) {
+  const params = await searchParams;
   const [products, recentProducts] = await Promise.all([
     getAllProductsWithStock(),
     getRecentProductsWithStock()
@@ -25,6 +34,7 @@ export default async function RemoveStockPage() {
       <div className="panel p-4">
         <StockMovementForm
           action={removeStockAction}
+          initialProductId={params?.productId}
           mode="remove"
           products={products}
           reasonOptions={removeReasonOptions}

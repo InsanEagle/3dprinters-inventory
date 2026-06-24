@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import clsx from "clsx";
 import type { ProductForPicker } from "@/lib/product-types";
+import type { ProductReturnTarget } from "@/lib/product-return";
 import { ProductPicker } from "@/components/ProductPicker";
 import { SubmitButton } from "@/components/SubmitButton";
 
@@ -48,6 +49,13 @@ const titles = {
   }
 };
 
+const returnTargets: Record<StockMovementFormProps["mode"], ProductReturnTarget> =
+  {
+    add: "stock-add",
+    remove: "stock-remove",
+    correction: "stock-correction"
+  };
+
 export function StockMovementForm({
   mode,
   products,
@@ -62,6 +70,7 @@ export function StockMovementForm({
   return (
     <form action={formAction} className="space-y-5">
       <ProductPicker
+        createProductReturnTo={returnTargets[mode]}
         initialProductId={initialProductId}
         products={products}
         recentProducts={recentProducts}

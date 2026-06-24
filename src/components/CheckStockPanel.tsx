@@ -8,11 +8,13 @@ import { ProductPicker } from "@/components/ProductPicker";
 type CheckStockPanelProps = {
   products: ProductForPicker[];
   recentProducts: ProductForPicker[];
+  initialProductId?: string;
 };
 
 export function CheckStockPanel({
   products,
-  recentProducts
+  recentProducts,
+  initialProductId
 }: CheckStockPanelProps) {
   const [selectedProduct, setSelectedProduct] =
     useState<ProductForPicker | null>(null);
@@ -20,6 +22,8 @@ export function CheckStockPanel({
   return (
     <div className="space-y-5">
       <ProductPicker
+        createProductReturnTo="stock-check"
+        initialProductId={initialProductId}
         name="checkProductId"
         onChange={setSelectedProduct}
         products={products}

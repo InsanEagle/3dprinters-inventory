@@ -2,9 +2,20 @@
 
 import { useActionState } from "react";
 import { createProductAction } from "@/app/actions/products";
+import type { ProductReturnTarget } from "@/lib/product-return";
 import { SubmitButton } from "@/components/SubmitButton";
 
-export function ProductForm() {
+type ProductFormProps = {
+  initialName?: string;
+  initialBarcode?: string;
+  returnTo: ProductReturnTarget;
+};
+
+export function ProductForm({
+  initialName = "",
+  initialBarcode = "",
+  returnTo
+}: ProductFormProps) {
   const [state, formAction] = useActionState(createProductAction, {
     status: "",
     message: ""
@@ -12,11 +23,20 @@ export function ProductForm() {
 
   return (
     <form action={formAction} className="space-y-5">
+      <input name="returnTo" type="hidden" value={returnTo} />
+
       <div className="space-y-2">
         <label className="label" htmlFor="name">
           Название
         </label>
-        <input className="field" id="name" name="name" required type="text" />
+        <input
+          className="field"
+          defaultValue={initialName}
+          id="name"
+          name="name"
+          required
+          type="text"
+        />
       </div>
 
       <div className="space-y-2">
@@ -28,19 +48,6 @@ export function ProductForm() {
           id="internalSku"
           name="internalSku"
           required
-          type="text"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="label" htmlFor="ozonOfferId">
-          Ozon offer ID
-        </label>
-        <input
-          className="field"
-          id="ozonOfferId"
-          name="ozonOfferId"
-          placeholder="Необязательно"
           type="text"
         />
       </div>
@@ -59,28 +66,52 @@ export function ProductForm() {
       </div>
 
       <div className="space-y-2">
-        <label className="label" htmlFor="barcodes">
-          Штрихкоды
+        <label className="label" htmlFor="barcode">
+          Barcode
         </label>
-        <textarea
-          className="field min-h-24 resize-y"
-          id="barcodes"
-          name="barcodes"
-          placeholder="Каждый штрихкод с новой строки или через запятую"
+        <input
+          className="field"
+          defaultValue={initialBarcode}
+          id="barcode"
+          name="barcode"
+          placeholder="Необязательно"
+          type="text"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="label" htmlFor="searchAliases">
-          Поисковые алиасы
-        </label>
-        <textarea
-          className="field min-h-24 resize-y"
-          id="searchAliases"
-          name="searchAliases"
-          placeholder="Синонимы, короткие названия, слова сотрудников"
-        />
-      </div>
+      <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-700">
+          Ozon offer ID и алиасы
+        </summary>
+
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <label className="label" htmlFor="ozonOfferId">
+              Ozon offer ID
+            </label>
+            <input
+              className="field"
+              id="ozonOfferId"
+              name="ozonOfferId"
+              placeholder="Необязательно"
+              type="text"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="label" htmlFor="searchAliases">
+              Поисковые алиасы
+            </label>
+            <input
+              className="field"
+              id="searchAliases"
+              name="searchAliases"
+              placeholder="Синонимы, короткие названия"
+              type="text"
+            />
+          </div>
+        </div>
+      </details>
 
       {state.message ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900">
