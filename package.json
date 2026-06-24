@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
-    "prisma:apply:init": "node prisma/apply-migration.js"
+    "prisma:apply:init": "node prisma/apply-migration.js",
+    "backup:db": "node scripts/backup-db.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

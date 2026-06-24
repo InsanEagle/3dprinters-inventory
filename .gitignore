@@ -32,5 +32,6 @@ yarn-error.log*
 pnpm-debug.log*
 tmp/
 .tmp/
+backups/
 .DS_Store
 Thumbs.db
