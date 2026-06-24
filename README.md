@@ -33,6 +33,8 @@ npm run dev
 
 На Windows `prisma migrate dev` в этом проекте может падать пустой ошибкой schema engine. Для локального применения SQL-миграций используйте `npm run prisma:apply:init`: helper применяет checked-in миграции без запуска schema engine. Для новых локальных миграций можно пробовать `npm run prisma:migrate -- --name <name>`, а в production нужно использовать только `npm run prisma:deploy`.
 
+`npm run prisma:apply:init` безопасен для повторного запуска: локально он ведет таблицу `_local_migrations`, применяет только новые SQL-миграции и пишет в консоль `applied` / `skipped`.
+
 Seed-сотрудники:
 
 - Анна: PIN `1111`
@@ -59,6 +61,8 @@ npm run prisma:seed      # заполнить пустую локальную д
 ```bash
 npm run prisma:apply:init
 ```
+
+Команду можно запускать повторно: уже учтенные миграции будут пропущены.
 
 Обычная локальная разработка миграций, если `prisma migrate dev` работает в вашей среде:
 

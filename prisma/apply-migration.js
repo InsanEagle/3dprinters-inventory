@@ -3,6 +3,7 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
+const LOCAL_MIGRATIONS_TABLE = "_local_migrations";
 
 function getStatements(sql) {
   return sql
@@ -14,15 +15,18 @@ function getStatements(sql) {
     .filter(Boolean);
 }
 
-function getMigrationFiles() {
+function getMigrations() {
   const migrationsPath = path.join(__dirname, "migrations");
 
   return fs
     .readdirSync(migrationsPath, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(migrationsPath, entry.name, "migration.sql"))
-    .filter((migrationPath) => fs.existsSync(migrationPath))
-    .sort();
+    .map((entry) => ({
+      name: entry.name,
+      path: path.join(migrationsPath, entry.name, "migration.sql")
+    }))
+    .filter((migration) => fs.existsSync(migration.path))
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 function isAlreadyAppliedError(message) {
@@ -32,26 +36,91 @@ function isAlreadyAppliedError(message) {
   );
 }
 
-async function main() {
-  const migrationFiles = getMigrationFiles();
+async function ensureLocalMigrationsTable() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "${LOCAL_MIGRATIONS_TABLE}" (
+      "name" TEXT NOT NULL PRIMARY KEY,
+      "applied_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
 
-  for (const migrationPath of migrationFiles) {
-    const sql = fs.readFileSync(migrationPath, "utf8");
+async function getAppliedMigrationNames() {
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT "name" FROM "${LOCAL_MIGRATIONS_TABLE}"`
+  );
 
-    for (const statement of getStatements(sql)) {
-      try {
-        await prisma.$executeRawUnsafe(statement);
-      } catch (error) {
-        const message = String(error.message || error);
+  return new Set(rows.map((row) => row.name));
+}
 
-        if (!isAlreadyAppliedError(message)) {
-          throw error;
-        }
+async function recordAppliedMigration(name) {
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "${LOCAL_MIGRATIONS_TABLE}" ("name") VALUES (?)`,
+    name
+  );
+}
+
+async function applyMigration(migration) {
+  const sql = fs.readFileSync(migration.path, "utf8");
+  let executedStatements = 0;
+  let alreadyAppliedStatements = 0;
+
+  for (const statement of getStatements(sql)) {
+    try {
+      await prisma.$executeRawUnsafe(statement);
+      executedStatements += 1;
+    } catch (error) {
+      const message = String(error.message || error);
+
+      if (!isAlreadyAppliedError(message)) {
+        throw error;
       }
+
+      alreadyAppliedStatements += 1;
     }
   }
 
-  console.log(`Applied ${migrationFiles.length} migration file(s).`);
+  await recordAppliedMigration(migration.name);
+
+  if (alreadyAppliedStatements > 0 && executedStatements === 0) {
+    console.log(`applied: ${migration.name} (recorded existing changes)`);
+    return;
+  }
+
+  if (alreadyAppliedStatements > 0) {
+    console.log(
+      `applied: ${migration.name} (${executedStatements} statement(s), ${alreadyAppliedStatements} already present)`
+    );
+    return;
+  }
+
+  console.log(`applied: ${migration.name}`);
+}
+
+async function main() {
+  await ensureLocalMigrationsTable();
+
+  const migrations = getMigrations();
+  const appliedMigrationNames = await getAppliedMigrationNames();
+
+  let appliedCount = 0;
+  let skippedCount = 0;
+
+  for (const migration of migrations) {
+    if (appliedMigrationNames.has(migration.name)) {
+      console.log(`skipped: ${migration.name}`);
+      skippedCount += 1;
+      continue;
+    }
+
+    await applyMigration(migration);
+    appliedMigrationNames.add(migration.name);
+    appliedCount += 1;
+  }
+
+  console.log(
+    `Done. Applied ${appliedCount} migration(s), skipped ${skippedCount} migration(s).`
+  );
 }
 
 main()
