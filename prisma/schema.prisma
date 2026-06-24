@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum MovementKind {
+  ADD
+  REMOVE
+  CORRECTION
+}
+
+enum MovementReason {
+  READY_PRODUCT
+  OZON_SUPPLY
+  FBS
+  YANDEX
+  AVITO
+  CDEK
+  DEFECT
+  REWORK
+  OTHER
+  INVENTORY_CORRECTION
+}
+
+model Product {
+  id           String          @id @default(cuid())
+  name         String
+  internalSku  String          @unique @map("internal_sku")
+  ozonOfferId  String?         @unique @map("ozon_offer_id")
+  category     String
+  searchAliases String         @default("") @map("search_aliases")
+  isActive     Boolean         @default(true) @map("is_active")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  barcodes     Barcode[]
+  movements    StockMovement[]
+  supplies     Supply[]
+
+  @@index([name])
+  @@index([category])
+}
+
+model Barcode {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([productId])
+}
+
+model Employee {
+  id        String          @id @default(cuid())
+  name      String
+  pinHash   String          @map("pin_hash")
+  role      String          @default("worker")
+  isActive  Boolean         @default(true) @map("is_active")
+  createdAt DateTime        @default(now()) @map("created_at")
+  movements StockMovement[]
+}
+
+model Supply {
+  id          String          @id @default(cuid())
+  productId   String?         @map("product_id")
+  destination String
+  reference   String?
+  comment     String?
+  createdAt   DateTime        @default(now()) @map("created_at")
+  product     Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  movements   StockMovement[]
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model StockMovement {
+  id            String         @id @default(cuid())
+  productId     String         @map("product_id")
+  employeeId    String?        @map("employee_id")
+  supplyId      String?        @map("supply_id")
+  kind          MovementKind
+  quantityDelta Int            @map("quantity_delta")
+  reason        MovementReason
+  comment       String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  employee      Employee?      @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  supply        Supply?        @relation(fields: [supplyId], references: [id], onDelete: SetNull)
+
+  @@index([productId, createdAt])
+  @@index([employeeId, createdAt])
+  @@index([reason])
+}
