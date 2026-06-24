@@ -99,6 +99,57 @@ npm run backup:db
 
 Если приложение работает на VPS, периодически скачивайте backup-файлы на свой компьютер или копируйте их за пределы сервера. Бэкап, который лежит только на том же VPS, не спасет при потере сервера или диска.
 
+## Восстановление базы из бэкапа
+
+Восстановление делается вручную: остановите приложение, сделайте свежий бэкап текущей базы, затем замените файл базы выбранным backup-файлом. Папка `backups/` не коммитится в Git, поэтому нужный backup-файл должен быть доступен на машине, где выполняется восстановление.
+
+Windows / PowerShell:
+
+```powershell
+# 1. Остановите dev-server, pm2 или службу приложения.
+
+# 2. Сделайте дополнительный backup текущей базы.
+npm run backup:db
+
+# 3. Посмотрите DATABASE_URL и определите текущий файл базы.
+Get-Content .env | Select-String "DATABASE_URL"
+# Для DATABASE_URL="file:./dev.db" текущий файл обычно prisma/dev.db.
+
+# 4. Выберите backup-файл и скопируйте его поверх текущей базы.
+$backup = "backups/dev-YYYY-MM-DDTHH-MM-SS-ZZZZ.db"
+$db = "prisma/dev.db"
+Copy-Item -LiteralPath $backup -Destination $db -Force
+
+# 5. Запустите приложение снова.
+npm run dev
+```
+
+VPS / Linux:
+
+```bash
+# 1. Остановите приложение, например systemd или pm2.
+sudo systemctl stop fbo-inventory
+# или: pm2 stop fbo-inventory
+
+# 2. Сделайте дополнительный backup текущей базы.
+npm run backup:db
+
+# 3. Посмотрите DATABASE_URL и определите текущий файл базы.
+grep '^DATABASE_URL=' .env
+# Для DATABASE_URL="file:./production.db" текущий файл обычно prisma/production.db.
+
+# 4. Выберите backup-файл и скопируйте его поверх текущей базы.
+backup="backups/production-YYYY-MM-DDTHH-MM-SS-ZZZZ.db"
+db="prisma/production.db"
+cp "$backup" "$db"
+
+# 5. Запустите приложение снова.
+sudo systemctl start fbo-inventory
+# или: pm2 start fbo-inventory
+```
+
+После запуска откройте `/stock/check` или `/movements` и проверьте, что данные соответствуют выбранному бэкапу.
+
 ## Деплой на VPS без платных сервисов
 
 1. Установите Node.js 22+ и Git.
