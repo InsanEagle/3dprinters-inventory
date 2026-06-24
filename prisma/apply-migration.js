@@ -14,26 +14,44 @@ function getStatements(sql) {
     .filter(Boolean);
 }
 
-async function main() {
-  const migrationPath = path.join(
-    __dirname,
-    "migrations",
-    "20260625000000_init",
-    "migration.sql"
+function getMigrationFiles() {
+  const migrationsPath = path.join(__dirname, "migrations");
+
+  return fs
+    .readdirSync(migrationsPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(migrationsPath, entry.name, "migration.sql"))
+    .filter((migrationPath) => fs.existsSync(migrationPath))
+    .sort();
+}
+
+function isAlreadyAppliedError(message) {
+  return (
+    message.includes("already exists") ||
+    message.includes("duplicate column name")
   );
-  const sql = fs.readFileSync(migrationPath, "utf8");
+}
 
-  for (const statement of getStatements(sql)) {
-    try {
-      await prisma.$executeRawUnsafe(statement);
-    } catch (error) {
-      const message = String(error.message || error);
+async function main() {
+  const migrationFiles = getMigrationFiles();
 
-      if (!message.includes("already exists")) {
-        throw error;
+  for (const migrationPath of migrationFiles) {
+    const sql = fs.readFileSync(migrationPath, "utf8");
+
+    for (const statement of getStatements(sql)) {
+      try {
+        await prisma.$executeRawUnsafe(statement);
+      } catch (error) {
+        const message = String(error.message || error);
+
+        if (!isAlreadyAppliedError(message)) {
+          throw error;
+        }
       }
     }
   }
+
+  console.log(`Applied ${migrationFiles.length} migration file(s).`);
 }
 
 main()

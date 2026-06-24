@@ -2,6 +2,7 @@ import { StockMovementForm } from "@/components/StockMovementForm";
 import { addStockAction } from "@/app/actions/stock";
 import {
   getAllProductsWithStock,
+  getFavoriteProductsWithStock,
   getRecentProductsWithStock
 } from "@/lib/stock";
 
@@ -13,9 +14,10 @@ type AddStockPageProps = {
 
 export default async function AddStockPage({ searchParams }: AddStockPageProps) {
   const params = await searchParams;
-  const [products, recentProducts] = await Promise.all([
+  const [products, recentProducts, favoriteProducts] = await Promise.all([
     getAllProductsWithStock(),
-    getRecentProductsWithStock()
+    getRecentProductsWithStock(),
+    getFavoriteProductsWithStock()
   ]);
 
   return (
@@ -30,6 +32,7 @@ export default async function AddStockPage({ searchParams }: AddStockPageProps) 
       <div className="panel p-4">
         <StockMovementForm
           action={addStockAction}
+          favoriteProducts={favoriteProducts}
           initialProductId={params?.productId}
           mode="add"
           products={products}

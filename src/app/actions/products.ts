@@ -25,6 +25,19 @@ function parseBarcodes(value: string) {
   ];
 }
 
+function parseBoolean(value: FormDataEntryValue | null) {
+  return value === "1" || value === "on" || value === "true";
+}
+
+function revalidateProductViews() {
+  revalidatePath("/products");
+  revalidatePath("/");
+  revalidatePath("/stock/add");
+  revalidatePath("/stock/remove");
+  revalidatePath("/stock/check");
+  revalidatePath("/stock/correction");
+}
+
 export async function createProductAction(
   _previousState: { status?: string; message?: string },
   formData: FormData
@@ -36,6 +49,7 @@ export async function createProductAction(
   const ozonOfferId = cleanText(formData.get("ozonOfferId"));
   const category = cleanText(formData.get("category"));
   const searchAliases = cleanText(formData.get("searchAliases"));
+  const isFavorite = parseBoolean(formData.get("isFavorite"));
   const returnTo =
     parseProductReturnTarget(cleanText(formData.get("returnTo"))) ||
     "products";
@@ -83,6 +97,7 @@ export async function createProductAction(
         ozonOfferId: ozonOfferId || null,
         category,
         searchAliases,
+        isFavorite,
         barcodes: {
           create: barcodes.map((value) => ({
             value
@@ -105,11 +120,28 @@ export async function createProductAction(
     throw error;
   }
 
-  revalidatePath("/products");
-  revalidatePath("/");
-  revalidatePath("/stock/add");
-  revalidatePath("/stock/remove");
-  revalidatePath("/stock/check");
-  revalidatePath("/stock/correction");
+  revalidateProductViews();
   redirect(getProductReturnPath(returnTo, productId));
+}
+
+export async function toggleFavoriteProductAction(formData: FormData) {
+  await requireEmployee();
+
+  const productId = cleanText(formData.get("productId"));
+  const isFavorite = parseBoolean(formData.get("isFavorite"));
+
+  if (!productId) {
+    return;
+  }
+
+  await prisma.product.update({
+    where: {
+      id: productId
+    },
+    data: {
+      isFavorite
+    }
+  });
+
+  revalidateProductViews();
 }

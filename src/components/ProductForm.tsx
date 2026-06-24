@@ -79,6 +79,15 @@ export function ProductForm({
         />
       </div>
 
+      <label className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-ink">
+        <input
+          className="h-5 w-5 accent-blue-600"
+          name="isFavorite"
+          type="checkbox"
+        />
+        Ходовой товар
+      </label>
+
       <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
         <summary className="cursor-pointer text-sm font-semibold text-slate-700">
           Ozon offer ID и алиасы

@@ -18,6 +18,7 @@ function toPickerProduct(product: ProductRecord, stock: number): ProductForPicke
     ozonOfferId: product.ozonOfferId,
     category: product.category,
     searchAliases: product.searchAliases,
+    isFavorite: product.isFavorite,
     stock,
     barcodes: product.barcodes.map((barcode) => ({
       value: barcode.value
@@ -79,9 +80,9 @@ export async function getAllProductsWithStock() {
   return withStock(products);
 }
 
-export async function getRecentProductsWithStock(limit = 6) {
+export async function getRecentProductsWithStock(limit = 12) {
   const movements = await prisma.stockMovement.findMany({
-    take: 50,
+    take: 100,
     orderBy: {
       createdAt: "desc"
     },
@@ -111,6 +112,33 @@ export async function getRecentProductsWithStock(limit = 6) {
   }
 
   return withStock([...uniqueProducts.values()]);
+}
+
+export async function getFavoriteProductsWithStock(limit = 12) {
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      isFavorite: true
+    },
+    include: {
+      barcodes: {
+        orderBy: {
+          createdAt: "asc"
+        }
+      }
+    },
+    orderBy: [
+      {
+        category: "asc"
+      },
+      {
+        name: "asc"
+      }
+    ],
+    take: limit
+  });
+
+  return withStock(products);
 }
 
 export async function getCurrentStock(productId: string) {

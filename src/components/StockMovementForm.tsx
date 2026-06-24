@@ -23,6 +23,7 @@ type StockMovementFormProps = {
   mode: "add" | "remove" | "correction";
   products: ProductForPicker[];
   recentProducts: ProductForPicker[];
+  favoriteProducts: ProductForPicker[];
   action: (
     previousState: StockActionState,
     formData: FormData
@@ -60,6 +61,7 @@ export function StockMovementForm({
   mode,
   products,
   recentProducts,
+  favoriteProducts,
   action,
   reasonOptions = [],
   initialProductId
@@ -71,6 +73,7 @@ export function StockMovementForm({
     <form action={formAction} className="space-y-5">
       <ProductPicker
         createProductReturnTo={returnTargets[mode]}
+        favoriteProducts={favoriteProducts}
         initialProductId={initialProductId}
         products={products}
         recentProducts={recentProducts}

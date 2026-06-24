@@ -90,6 +90,7 @@ async function main() {
         internalSku: "FBO-SPOOL-HOLDER-BLK",
         ozonOfferId: "OZ-SPOOL-BLK",
         category: "Органайзеры",
+        isFavorite: true,
         searchAliases: "катушка держак spool holder пластик черный",
         barcodes: {
           create: [{ value: "4600000000011" }, { value: "FBO1001" }]
@@ -102,6 +103,7 @@ async function main() {
         internalSku: "FBO-CABLE-CLIP-10",
         ozonOfferId: "OZ-CLIP-10-20",
         category: "Крепеж",
+        isFavorite: true,
         searchAliases: "кабель провод клипса зажим 10мм",
         barcodes: {
           create: [{ value: "4600000000028" }, { value: "FBO1002" }]

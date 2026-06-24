@@ -31,7 +31,7 @@ npm run dev
 
 Откройте `http://localhost:3000`.
 
-На Windows `prisma migrate dev` в этом проекте может падать пустой ошибкой schema engine. Для первого локального создания SQLite-схемы используйте `npm run prisma:apply:init`: helper применяет уже созданную init-миграцию без запуска schema engine. Для новых локальных миграций можно пробовать `npm run prisma:migrate -- --name <name>`, а в production нужно использовать только `npm run prisma:deploy`.
+На Windows `prisma migrate dev` в этом проекте может падать пустой ошибкой schema engine. Для локального применения SQL-миграций используйте `npm run prisma:apply:init`: helper применяет checked-in миграции без запуска schema engine. Для новых локальных миграций можно пробовать `npm run prisma:migrate -- --name <name>`, а в production нужно использовать только `npm run prisma:deploy`.
 
 Seed-сотрудники:
 
@@ -47,14 +47,14 @@ npm run dev              # dev-сервер
 npm run build            # Prisma generate + production build
 npm run start            # production server после build
 npm run prisma:migrate   # новая локальная миграция
-npm run prisma:apply:init # применить init-миграцию локально без prisma migrate dev
+npm run prisma:apply:init # применить локальные SQL-миграции без prisma migrate dev
 npm run prisma:deploy    # применить миграции на сервере
 npm run prisma:seed      # заполнить пустую локальную демо-базу
 ```
 
 ## Миграции базы
 
-Первое локальное создание базы на Windows:
+Локальное создание или обновление базы на Windows:
 
 ```bash
 npm run prisma:apply:init

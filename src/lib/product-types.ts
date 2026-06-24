@@ -5,6 +5,7 @@ export type ProductForPicker = {
   ozonOfferId: string | null;
   category: string;
   searchAliases: string;
+  isFavorite: boolean;
   stock: number;
   barcodes: Array<{
     value: string;

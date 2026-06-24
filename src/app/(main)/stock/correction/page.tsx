@@ -2,6 +2,7 @@ import { StockMovementForm } from "@/components/StockMovementForm";
 import { correctionStockAction } from "@/app/actions/stock";
 import {
   getAllProductsWithStock,
+  getFavoriteProductsWithStock,
   getRecentProductsWithStock
 } from "@/lib/stock";
 
@@ -15,9 +16,10 @@ export default async function CorrectionStockPage({
   searchParams
 }: CorrectionPageProps) {
   const params = await searchParams;
-  const [products, recentProducts] = await Promise.all([
+  const [products, recentProducts, favoriteProducts] = await Promise.all([
     getAllProductsWithStock(),
-    getRecentProductsWithStock()
+    getRecentProductsWithStock(),
+    getFavoriteProductsWithStock()
   ]);
 
   return (
@@ -33,6 +35,7 @@ export default async function CorrectionStockPage({
       <div className="panel p-4">
         <StockMovementForm
           action={correctionStockAction}
+          favoriteProducts={favoriteProducts}
           initialProductId={params?.productId}
           mode="correction"
           products={products}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toggleFavoriteProductAction } from "@/app/actions/products";
 import type { ProductForPicker } from "@/lib/product-types";
 import { getNewProductHref } from "@/lib/product-return";
 
@@ -57,7 +58,14 @@ export function ProductsList({ products }: ProductsListProps) {
           <div className="panel p-4" key={product.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="font-semibold text-ink">{product.name}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="font-semibold text-ink">{product.name}</div>
+                  {product.isFavorite ? (
+                    <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-accent">
+                      Ходовой
+                    </span>
+                  ) : null}
+                </div>
                 <div className="mt-1 text-sm text-slate-500">
                   {product.internalSku}
                   {product.ozonOfferId ? ` · ${product.ozonOfferId}` : ""}
@@ -84,6 +92,27 @@ export function ProductsList({ products }: ProductsListProps) {
                 </span>
               ))}
             </div>
+
+            <form action={toggleFavoriteProductAction} className="mt-3">
+              <input name="productId" type="hidden" value={product.id} />
+              <input
+                name="isFavorite"
+                type="hidden"
+                value={product.isFavorite ? "0" : "1"}
+              />
+              <button
+                className={
+                  product.isFavorite
+                    ? "secondary-button w-full"
+                    : "primary-button"
+                }
+                type="submit"
+              >
+                {product.isFavorite
+                  ? "Убрать из ходовых"
+                  : "Сделать ходовым"}
+              </button>
+            </form>
           </div>
         ))}
       </div>

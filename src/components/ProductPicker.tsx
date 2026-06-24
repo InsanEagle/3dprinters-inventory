@@ -16,6 +16,7 @@ type ScannerControls = {
 type ProductPickerProps = {
   products: ProductForPicker[];
   recentProducts?: ProductForPicker[];
+  favoriteProducts?: ProductForPicker[];
   name?: string;
   label?: string;
   placeholder?: string;
@@ -23,6 +24,22 @@ type ProductPickerProps = {
   showStock?: boolean;
   createProductReturnTo?: ProductReturnTarget;
   onChange?: (product: ProductForPicker | null) => void;
+};
+
+type ProductCardProps = {
+  product: ProductForPicker;
+  selected: boolean;
+  showStock: boolean;
+  onSelect: (product: ProductForPicker) => void;
+};
+
+type ProductSectionProps = {
+  title: string;
+  emptyText: string;
+  products: ProductForPicker[];
+  selectedId: string;
+  showStock: boolean;
+  onSelect: (product: ProductForPicker) => void;
 };
 
 function normalize(value: string) {
@@ -55,9 +72,81 @@ function matchesProduct(product: ProductForPicker, query: string) {
   return tokens.every((token) => haystack.includes(token));
 }
 
+function ProductCard({
+  product,
+  selected,
+  showStock,
+  onSelect
+}: ProductCardProps) {
+  return (
+    <button
+      className={clsx(
+        "w-full rounded-lg border bg-white p-3 text-left transition active:scale-[0.99]",
+        selected ? "border-accent ring-4 ring-blue-100" : "border-slate-200"
+      )}
+      type="button"
+      onClick={() => onSelect(product)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-semibold text-ink">{product.name}</div>
+          <div className="mt-1 text-sm text-slate-500">
+            {product.internalSku} · {product.category}
+          </div>
+          {showStock ? (
+            <div className="mt-2 text-sm font-semibold text-slate-700">
+              Остаток: {product.stock} шт.
+            </div>
+          ) : null}
+        </div>
+
+        <span className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
+          Выбрать
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function ProductSection({
+  title,
+  emptyText,
+  products,
+  selectedId,
+  showStock,
+  onSelect
+}: ProductSectionProps) {
+  return (
+    <section className="space-y-2">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {title}
+      </div>
+
+      {products.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+          {emptyText}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              onSelect={onSelect}
+              product={product}
+              selected={selectedId === product.id}
+              showStock={showStock}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ProductPicker({
   products,
   recentProducts = [],
+  favoriteProducts = [],
   name = "productId",
   label = "Товар",
   placeholder = "Название, SKU, offer ID, штрихкод или категория",
@@ -87,15 +176,17 @@ export function ProductPicker({
     setSelectedId(initialProductId || "");
   }, [initialProductId]);
 
-  const visibleProducts = useMemo(() => {
-    const source = query.trim()
-      ? products.filter((product) => matchesProduct(product, query))
-      : recentProducts.length > 0
-        ? recentProducts
-        : products.slice(0, 8);
+  const hasQuery = query.trim().length > 0;
 
-    return source.slice(0, 30);
-  }, [products, query, recentProducts]);
+  const queryProducts = useMemo(
+    () =>
+      hasQuery
+        ? products
+            .filter((product) => matchesProduct(product, query))
+            .slice(0, 30)
+        : [],
+    [hasQuery, products, query]
+  );
 
   const selectProduct = useCallback((product: ProductForPicker) => {
     setSelectedId(product.id);
@@ -187,35 +278,37 @@ export function ProductPicker({
     <div className="space-y-3">
       <input name={name} type="hidden" value={selectedId} />
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="space-y-2">
         <label className="label" htmlFor={`${name}-query`}>
           {label}
         </label>
-        <button
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-accent"
-          type="button"
-          onClick={() => {
-            setScanError("");
-            setScannerOpen(true);
-          }}
-        >
-          Сканировать
-        </button>
-      </div>
 
-      <input
-        className="field"
-        id={`${name}-query`}
-        inputMode="search"
-        placeholder={placeholder}
-        type="search"
-        value={query}
-        onChange={(event) => {
-          setQuery(event.target.value);
-          setSelectedId("");
-          setUnknownScannedBarcode("");
-        }}
-      />
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <input
+            className="field"
+            id={`${name}-query`}
+            inputMode="search"
+            placeholder={placeholder}
+            type="search"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setSelectedId("");
+              setUnknownScannedBarcode("");
+            }}
+          />
+          <button
+            className="min-h-12 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-accent active:scale-[0.99]"
+            type="button"
+            onClick={() => {
+              setScanError("");
+              setScannerOpen(true);
+            }}
+          >
+            Сканировать
+          </button>
+        </div>
+      </div>
 
       {selectedProduct ? (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
@@ -261,63 +354,68 @@ export function ProductPicker({
         </div>
       ) : null}
 
-      <div className="space-y-2">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {query.trim() ? "Результаты" : "Последние товары"}
-        </div>
-
-        {visibleProducts.length === 0 ? (
-          <div className="space-y-3 rounded-lg border border-dashed border-slate-300 bg-white p-4">
-            <div>
-              <div className="font-semibold text-ink">Товар не найден</div>
-              <p className="mt-1 text-sm text-slate-500">
-                {unknownScannedBarcode
-                  ? `Сохранить barcode ${unknownScannedBarcode} в новой карточке товара.`
-                  : "Можно сразу создать минимальную карточку и вернуться к этой операции."}
-              </p>
-            </div>
-            <Link
-              className="primary-button"
-              href={getNewProductHref(createProductReturnTo, {
-                barcode: unknownScannedBarcode,
-                name: unknownScannedBarcode ? undefined : query
-              })}
-            >
-              Создать товар
-            </Link>
+      {hasQuery ? (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Результаты поиска
           </div>
-        ) : (
-          <div className="max-h-80 space-y-2 overflow-auto pr-1">
-            {visibleProducts.map((product) => (
-              <button
-                className={clsx(
-                  "w-full rounded-lg border bg-white p-3 text-left transition active:scale-[0.99]",
-                  selectedId === product.id
-                    ? "border-accent ring-4 ring-blue-100"
-                    : "border-slate-200"
-                )}
-                key={product.id}
-                type="button"
-                onClick={() => selectProduct(product)}
+
+          {queryProducts.length === 0 ? (
+            <div className="space-y-3 rounded-lg border border-dashed border-slate-300 bg-white p-4">
+              <div>
+                <div className="font-semibold text-ink">Товар не найден</div>
+                <p className="mt-1 text-sm text-slate-500">
+                  {unknownScannedBarcode
+                    ? `Сохранить barcode ${unknownScannedBarcode} в новой карточке товара.`
+                    : "Можно сразу создать минимальную карточку и вернуться к этой операции."}
+                </p>
+              </div>
+              <Link
+                className="primary-button"
+                href={getNewProductHref(createProductReturnTo, {
+                  barcode: unknownScannedBarcode,
+                  name: unknownScannedBarcode ? undefined : query
+                })}
               >
-                <div className="font-semibold text-ink">{product.name}</div>
-                <div className="mt-1 text-sm text-slate-500">
-                  {product.internalSku}
-                  {product.ozonOfferId ? ` · ${product.ozonOfferId}` : ""} ·{" "}
-                  {product.category}
-                </div>
-                {showStock ? (
-                  <div className="mt-2 text-sm font-semibold text-slate-700">
-                    Остаток: {product.stock} шт.
-                  </div>
-                ) : null}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+                Создать товар
+              </Link>
+            </div>
+          ) : (
+            <div className="max-h-80 space-y-2 overflow-auto pr-1">
+              {queryProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  onSelect={selectProduct}
+                  product={product}
+                  selected={selectedId === product.id}
+                  showStock={showStock}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <ProductSection
+            emptyText="Движений пока нет. Найдите товар через поиск."
+            onSelect={selectProduct}
+            products={recentProducts}
+            selectedId={selectedId}
+            showStock={showStock}
+            title="Последние товары"
+          />
+          <ProductSection
+            emptyText="Отметьте товары как ходовые в списке товаров."
+            onSelect={selectProduct}
+            products={favoriteProducts}
+            selectedId={selectedId}
+            showStock={showStock}
+            title="Ходовые товары"
+          />
+        </div>
+      )}
 
-      {unknownScannedBarcode && !selectedProduct && visibleProducts.length > 0 ? (
+      {unknownScannedBarcode && !selectedProduct && queryProducts.length > 0 ? (
         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <div>
             <div className="font-semibold text-amber-950">
