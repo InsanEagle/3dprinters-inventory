@@ -128,11 +128,17 @@ function ProductCard({
       type="button"
       onClick={() => onSelect(product)}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3">
-          <ProductThumbnail imageUrl={product.imageUrl} name={product.name} />
+          <ProductThumbnail
+            imageUrl={product.imageUrl}
+            name={product.name}
+            size="large"
+          />
           <div className="min-w-0">
-            <div className="font-semibold text-ink">{product.name}</div>
+            <div className="break-words font-semibold text-ink">
+              {product.name}
+            </div>
             <div className="mt-1 text-sm text-slate-500">
               {product.internalSku} · {product.category}
             </div>
@@ -144,7 +150,7 @@ function ProductCard({
           </div>
         </div>
 
-        <span className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
+        <span className="shrink-0 self-start rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
           Выбрать
         </span>
       </div>
@@ -362,10 +368,11 @@ export function ProductPicker({
             <ProductThumbnail
               imageUrl={selectedProduct.imageUrl}
               name={selectedProduct.name}
+              size="medium"
             />
             <div className="min-w-0">
               <div className="text-sm font-semibold text-accent">Выбрано</div>
-              <div className="mt-1 font-semibold text-ink">
+              <div className="mt-1 break-words font-semibold text-ink">
                 {selectedProduct.name}
               </div>
               <div className="mt-1 text-sm text-slate-600">

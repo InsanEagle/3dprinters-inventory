@@ -104,12 +104,13 @@ export function CheckStockPanel({
               className="bg-slate-700 text-blue-100"
               imageUrl={selectedProduct.imageUrl}
               name={selectedProduct.name}
+              size="medium"
             />
             <div className="min-w-0">
               <div className="text-sm text-blue-100">
                 Текущий расчетный остаток
               </div>
-              <div className="mt-1 font-semibold text-white">
+              <div className="mt-1 break-words font-semibold text-white">
                 {selectedProduct.name}
               </div>
             </div>
