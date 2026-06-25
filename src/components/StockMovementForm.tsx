@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
 import type { ProductForPicker } from "@/lib/product-types";
 import type { ProductReturnTarget } from "@/lib/product-return";
 import { ProductPicker } from "@/components/ProductPicker";
+import { QuantityStepper } from "@/components/QuantityStepper";
 import { SubmitButton } from "@/components/SubmitButton";
 
 type StockActionState = {
@@ -67,7 +68,42 @@ export function StockMovementForm({
   initialProductId
 }: StockMovementFormProps) {
   const [state, formAction] = useActionState(action, {});
+  const [selectedProduct, setSelectedProduct] = useState<ProductForPicker | null>(
+    () => products.find((product) => product.id === initialProductId) || null
+  );
+  const [quantity, setQuantity] = useState(mode === "correction" ? "0" : "1");
   const copy = titles[mode];
+  const quantityName = mode === "correction" ? "actualQuantity" : "quantity";
+  const quantityMin = mode === "correction" ? 0 : 1;
+  const quantityMax =
+    mode === "remove" && selectedProduct && selectedProduct.stock > 0
+      ? selectedProduct.stock
+      : undefined;
+  const parsedQuantity = Number.parseInt(quantity, 10);
+  const submitQuantity = Number.isInteger(parsedQuantity)
+    ? parsedQuantity
+    : quantityMin;
+
+  const handleProductChange = useCallback((product: ProductForPicker | null) => {
+    setSelectedProduct(product);
+  }, []);
+
+  useEffect(() => {
+    if (quantityMax === undefined) {
+      return;
+    }
+
+    if (Number.isInteger(parsedQuantity) && parsedQuantity > quantityMax) {
+      setQuantity(String(quantityMax));
+    }
+  }, [parsedQuantity, quantityMax]);
+
+  const submitLabel =
+    mode === "add"
+      ? `Добавить ${submitQuantity} шт.`
+      : mode === "remove"
+        ? `Взять ${submitQuantity} шт.`
+        : "Сделать коррекцию";
 
   return (
     <form action={formAction} className="space-y-5">
@@ -77,6 +113,7 @@ export function StockMovementForm({
         initialProductId={initialProductId}
         products={products}
         recentProducts={recentProducts}
+        onChange={handleProductChange}
       />
 
       <div className="space-y-2">
@@ -86,15 +123,14 @@ export function StockMovementForm({
         >
           {copy.quantityLabel}
         </label>
-        <input
-          className="field"
-          id={mode === "correction" ? "actualQuantity" : "quantity"}
-          inputMode="numeric"
-          min={mode === "correction" ? 0 : 1}
-          name={mode === "correction" ? "actualQuantity" : "quantity"}
-          placeholder="0"
+        <QuantityStepper
+          id={quantityName}
+          max={quantityMax}
+          min={quantityMin}
+          name={quantityName}
           required
-          type="number"
+          value={quantity}
+          onChange={setQuantity}
         />
       </div>
 
@@ -164,7 +200,7 @@ export function StockMovementForm({
         </div>
       ) : null}
 
-      <SubmitButton>{copy.button}</SubmitButton>
+      <SubmitButton>{submitLabel}</SubmitButton>
     </form>
   );
 }
