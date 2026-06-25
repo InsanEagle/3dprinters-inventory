@@ -38,6 +38,21 @@ export function getNewProductHref(
   return `/products/new?${params.toString()}`;
 }
 
+export function getBindBarcodeHref(
+  returnTo: ProductReturnTarget,
+  barcode: string
+) {
+  const params = new URLSearchParams({
+    returnTo
+  });
+
+  if (barcode.trim()) {
+    params.set("barcode", barcode.trim());
+  }
+
+  return `/products/barcode?${params.toString()}`;
+}
+
 export function getProductReturnPath(
   returnTo: ProductReturnTarget,
   productId: string

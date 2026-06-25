@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProductForPicker } from "@/lib/product-types";
 import {
+  getBindBarcodeHref,
   getNewProductHref,
   type ProductReturnTarget
 } from "@/lib/product-return";
@@ -42,6 +43,11 @@ type ProductSectionProps = {
   onSelect: (product: ProductForPicker) => void;
 };
 
+type UnknownBarcodeActionsProps = {
+  barcode: string;
+  returnTo: ProductReturnTarget;
+};
+
 function normalize(value: string) {
   return value.toLowerCase().replaceAll("ё", "е").trim();
 }
@@ -70,6 +76,40 @@ function matchesProduct(product: ProductForPicker, query: string) {
 
   const haystack = searchableText(product);
   return tokens.every((token) => haystack.includes(token));
+}
+
+function getTypedBarcodeCandidate(query: string) {
+  const value = query.trim();
+
+  if (!value || /\s/.test(value)) {
+    return "";
+  }
+
+  return value;
+}
+
+function UnknownBarcodeActions({
+  barcode,
+  returnTo
+}: UnknownBarcodeActionsProps) {
+  return (
+    <div className="grid gap-2">
+      <Link
+        className="primary-button"
+        href={getNewProductHref(returnTo, {
+          barcode
+        })}
+      >
+        Создать новый товар с этим штрихкодом
+      </Link>
+      <Link
+        className="secondary-button"
+        href={getBindBarcodeHref(returnTo, barcode)}
+      >
+        Привязать штрихкод к существующему товару
+      </Link>
+    </div>
+  );
 }
 
 function ProductCard({
@@ -177,6 +217,8 @@ export function ProductPicker({
   }, [initialProductId]);
 
   const hasQuery = query.trim().length > 0;
+  const unknownBarcodeCandidate =
+    unknownScannedBarcode || getTypedBarcodeCandidate(query);
 
   const queryProducts = useMemo(
     () =>
@@ -365,20 +407,26 @@ export function ProductPicker({
               <div>
                 <div className="font-semibold text-ink">Товар не найден</div>
                 <p className="mt-1 text-sm text-slate-500">
-                  {unknownScannedBarcode
-                    ? `Сохранить barcode ${unknownScannedBarcode} в новой карточке товара.`
+                  {unknownBarcodeCandidate
+                    ? `Код ${unknownBarcodeCandidate} можно сохранить в новой карточке или привязать к существующему товару.`
                     : "Можно сразу создать минимальную карточку и вернуться к этой операции."}
                 </p>
               </div>
-              <Link
-                className="primary-button"
-                href={getNewProductHref(createProductReturnTo, {
-                  barcode: unknownScannedBarcode,
-                  name: unknownScannedBarcode ? undefined : query
-                })}
-              >
-                Создать товар
-              </Link>
+              {unknownBarcodeCandidate ? (
+                <UnknownBarcodeActions
+                  barcode={unknownBarcodeCandidate}
+                  returnTo={createProductReturnTo}
+                />
+              ) : (
+                <Link
+                  className="primary-button"
+                  href={getNewProductHref(createProductReturnTo, {
+                    name: query
+                  })}
+                >
+                  Создать товар
+                </Link>
+              )}
             </div>
           ) : (
             <div className="max-h-80 space-y-2 overflow-auto pr-1">
@@ -422,17 +470,14 @@ export function ProductPicker({
               Товар не найден
             </div>
             <p className="mt-1 text-sm text-amber-900">
-              Сохранить barcode {unknownScannedBarcode} в новой карточке товара.
+              Код {unknownScannedBarcode} не совпал точно. Его можно сохранить в
+              новой карточке или привязать к существующему товару.
             </p>
           </div>
-          <Link
-            className="primary-button"
-            href={getNewProductHref(createProductReturnTo, {
-              barcode: unknownScannedBarcode
-            })}
-          >
-            Создать товар
-          </Link>
+          <UnknownBarcodeActions
+            barcode={unknownScannedBarcode}
+            returnTo={createProductReturnTo}
+          />
         </div>
       ) : null}
     </div>

@@ -124,6 +124,88 @@ export async function createProductAction(
   redirect(getProductReturnPath(returnTo, productId));
 }
 
+export async function bindBarcodeToProductAction(
+  _previousState: { status?: string; message?: string },
+  formData: FormData
+) {
+  await requireEmployee();
+
+  const barcode = cleanText(formData.get("barcode"));
+  const productId = cleanText(formData.get("productId"));
+  const returnTo =
+    parseProductReturnTarget(cleanText(formData.get("returnTo"))) ||
+    "products";
+
+  if (!barcode || !productId) {
+    return {
+      status: "error",
+      message: "Укажите штрихкод и выберите товар."
+    };
+  }
+
+  const [product, existingBarcode] = await Promise.all([
+    prisma.product.findUnique({
+      where: {
+        id: productId
+      },
+      select: {
+        id: true
+      }
+    }),
+    prisma.barcode.findUnique({
+      where: {
+        value: barcode
+      },
+      select: {
+        productId: true
+      }
+    })
+  ]);
+
+  if (!product) {
+    return {
+      status: "error",
+      message: "Товар не найден."
+    };
+  }
+
+  if (existingBarcode) {
+    if (existingBarcode.productId === productId) {
+      revalidateProductViews();
+      redirect(getProductReturnPath(returnTo, productId));
+    }
+
+    return {
+      status: "error",
+      message: `Штрихкод ${barcode} уже привязан к другому товару.`
+    };
+  }
+
+  try {
+    await prisma.barcode.create({
+      data: {
+        value: barcode,
+        productId
+      }
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        status: "error",
+        message: `Штрихкод ${barcode} уже привязан к другому товару.`
+      };
+    }
+
+    throw error;
+  }
+
+  revalidateProductViews();
+  redirect(getProductReturnPath(returnTo, productId));
+}
+
 export async function toggleFavoriteProductAction(formData: FormData) {
   await requireEmployee();
 
