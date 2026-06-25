@@ -26,7 +26,7 @@ export default async function LoginPage() {
           </p>
         </div>
 
-        <LoginForm />
+        <LoginForm showSeedHint={process.env.NODE_ENV !== "production"} />
       </div>
     </main>
   );

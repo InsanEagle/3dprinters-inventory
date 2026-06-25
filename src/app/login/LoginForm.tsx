@@ -4,7 +4,11 @@ import { useActionState } from "react";
 import { loginAction } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
 
-export function LoginForm() {
+type LoginFormProps = {
+  showSeedHint?: boolean;
+};
+
+export function LoginForm({ showSeedHint = false }: LoginFormProps) {
   const [state, formAction] = useActionState(loginAction, {
     status: "",
     message: ""
@@ -39,9 +43,11 @@ export function LoginForm() {
 
       <SubmitButton>Войти</SubmitButton>
 
-      <div className="rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
-        Seed-доступы для проверки: Анна 1111, Борис 2222.
-      </div>
+      {showSeedHint ? (
+        <div className="rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
+          Seed-доступы для проверки: Анна 1111, Борис 2222.
+        </div>
+      ) : null}
     </form>
   );
 }
