@@ -249,6 +249,47 @@ export async function removeStockAction(
   };
 }
 
+export async function getProductMovementsAction(productId: string) {
+  await requireEmployee();
+
+  if (!productId) {
+    return [];
+  }
+
+  const movements = await prisma.stockMovement.findMany({
+    where: {
+      productId
+    },
+    take: 10,
+    orderBy: {
+      createdAt: "desc"
+    },
+    select: {
+      id: true,
+      kind: true,
+      quantityDelta: true,
+      reason: true,
+      comment: true,
+      createdAt: true,
+      employee: {
+        select: {
+          name: true
+        }
+      }
+    }
+  });
+
+  return movements.map((movement) => ({
+    id: movement.id,
+    kind: movement.kind,
+    quantityDelta: movement.quantityDelta,
+    reason: movement.reason,
+    comment: movement.comment,
+    createdAt: movement.createdAt.toISOString(),
+    employeeName: movement.employee?.name ?? null
+  }));
+}
+
 export async function correctionStockAction(
   _previousState: StockActionState,
   formData: FormData
