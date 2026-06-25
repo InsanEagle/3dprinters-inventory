@@ -45,8 +45,14 @@ function parseEnv(content) {
 }
 
 function getDatabaseUrl() {
+  const databaseUrlFromEnv = process.env.DATABASE_URL?.trim();
+
+  if (databaseUrlFromEnv) {
+    return databaseUrlFromEnv;
+  }
+
   if (!fs.existsSync(envPath)) {
-    fail(`.env not found at ${envPath}`);
+    fail(`DATABASE_URL is missing in the environment and .env was not found at ${envPath}`);
   }
 
   const env = parseEnv(fs.readFileSync(envPath, "utf8"));

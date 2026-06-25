@@ -1,0 +1,19 @@
+services:
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      PIN_HASH_SECRET: ${PIN_HASH_SECRET}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3001}:3000"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
