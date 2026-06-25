@@ -5,6 +5,8 @@ import {
   getRecentProductsWithStock
 } from "@/lib/stock";
 
+export const dynamic = "force-dynamic";
+
 type CheckStockPageProps = {
   searchParams?: Promise<{
     productId?: string;

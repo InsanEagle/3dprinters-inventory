@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentEmployee } from "@/lib/auth";
 import { LoginForm } from "@/app/login/LoginForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const employee = await getCurrentEmployee();
 

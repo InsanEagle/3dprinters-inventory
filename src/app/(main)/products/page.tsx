@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ProductsList } from "@/components/ProductsList";
 import { getAllProductsWithStock } from "@/lib/stock";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
   const products = await getAllProductsWithStock();
 

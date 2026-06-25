@@ -1,6 +1,8 @@
 import { ProductForm } from "@/components/ProductForm";
 import { parseProductReturnTarget } from "@/lib/product-return";
 
+export const dynamic = "force-dynamic";
+
 type NewProductPageProps = {
   searchParams?: Promise<{
     barcode?: string;

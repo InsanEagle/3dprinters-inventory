@@ -2,6 +2,8 @@ import Link from "next/link";
 import { BigActionButton } from "@/components/BigActionButton";
 import { getInventorySummary } from "@/lib/stock";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const summary = await getInventorySummary();
 

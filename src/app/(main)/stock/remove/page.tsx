@@ -7,6 +7,8 @@ import {
   getRecentProductsWithStock
 } from "@/lib/stock";
 
+export const dynamic = "force-dynamic";
+
 type RemoveStockPageProps = {
   searchParams?: Promise<{
     productId?: string;

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { getKindLabel, getReasonLabel } from "@/lib/reasons";
 
+export const dynamic = "force-dynamic";
+
 export default async function MovementsPage() {
   const movements = await prisma.stockMovement.findMany({
     take: 100,
