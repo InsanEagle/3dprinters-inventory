@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StockMovementForm } from "@/components/StockMovementForm";
 import { removeStockAction } from "@/app/actions/stock";
 import { removeReasonOptions } from "@/lib/reasons";
@@ -28,6 +29,12 @@ export default async function RemoveStockPage({
   return (
     <div className="space-y-5">
       <div>
+        <Link
+          className="mb-3 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-accent active:scale-[0.99]"
+          href="/"
+        >
+          ← На главную
+        </Link>
         <h1 className="text-2xl font-bold text-ink">Взять товар</h1>
         <p className="mt-1 text-sm text-slate-600">
           Списание в минус заблокировано. При нехватке приложение предложит

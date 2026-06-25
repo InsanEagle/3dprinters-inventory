@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StockMovementForm } from "@/components/StockMovementForm";
 import { correctionStockAction } from "@/app/actions/stock";
 import {
@@ -27,6 +28,12 @@ export default async function CorrectionStockPage({
   return (
     <div className="space-y-5">
       <div>
+        <Link
+          className="mb-3 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-accent active:scale-[0.99]"
+          href="/"
+        >
+          ← На главную
+        </Link>
         <h1 className="text-2xl font-bold text-ink">Коррекция</h1>
         <p className="mt-1 text-sm text-slate-600">
           Остаток не редактируется напрямую: приложение добавит движение на

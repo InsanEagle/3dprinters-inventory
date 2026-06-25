@@ -90,6 +90,7 @@ export function CheckStockPanel({
       <ProductPicker
         createProductReturnTo="stock-check"
         favoriteProducts={favoriteProducts}
+        allowChangeSelection
         initialProductId={initialProductId}
         name="checkProductId"
         onChange={setSelectedProduct}

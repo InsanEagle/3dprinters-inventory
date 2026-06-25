@@ -110,97 +110,102 @@ export function StockMovementForm({
       <ProductPicker
         createProductReturnTo={returnTargets[mode]}
         favoriteProducts={favoriteProducts}
+        allowChangeSelection
         initialProductId={initialProductId}
         products={products}
         recentProducts={recentProducts}
         onChange={handleProductChange}
       />
 
-      <div className="space-y-2">
-        <label
-          className="label"
-          htmlFor={mode === "correction" ? "actualQuantity" : "quantity"}
-        >
-          {copy.quantityLabel}
-        </label>
-        <QuantityStepper
-          id={quantityName}
-          max={quantityMax}
-          min={quantityMin}
-          name={quantityName}
-          required
-          value={quantity}
-          onChange={setQuantity}
-        />
-      </div>
-
-      {mode === "remove" ? (
-        <div className="space-y-2">
-          <label className="label" htmlFor="reason">
-            Причина расхода
-          </label>
-          <select className="field" id="reason" name="reason" required>
-            {reasonOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      ) : null}
-
-      {mode === "remove" ? (
-        <div className="space-y-2">
-          <label className="label" htmlFor="reference">
-            Номер поставки или заказа
-          </label>
-          <input
-            className="field"
-            id="reference"
-            name="reference"
-            placeholder="Необязательно"
-            type="text"
-          />
-        </div>
-      ) : null}
-
-      <div className="space-y-2">
-        <label className="label" htmlFor="comment">
-          {copy.comment}
-        </label>
-        <textarea
-          className="field min-h-24 resize-y"
-          id="comment"
-          name="comment"
-          placeholder="Необязательно"
-        />
-      </div>
-
-      {state.message ? (
-        <div
-          className={clsx(
-            "rounded-lg border p-3 text-sm",
-            state.status === "success" &&
-              "border-emerald-200 bg-emerald-50 text-emerald-900",
-            state.status === "warning" &&
-              "border-amber-200 bg-amber-50 text-amber-900",
-            state.status === "error" &&
-              "border-red-200 bg-red-50 text-red-900"
-          )}
-        >
-          <div>{state.message}</div>
-          {state.correctionUrl ? (
-            <Link
-              className="mt-3 inline-flex font-semibold text-amber-950 underline"
-              href={state.correctionUrl}
+      {selectedProduct ? (
+        <>
+          <div className="space-y-2">
+            <label
+              className="label"
+              htmlFor={mode === "correction" ? "actualQuantity" : "quantity"}
             >
-              Открыть коррекцию
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
+              {copy.quantityLabel}
+            </label>
+            <QuantityStepper
+              id={quantityName}
+              max={quantityMax}
+              min={quantityMin}
+              name={quantityName}
+              required
+              value={quantity}
+              onChange={setQuantity}
+            />
+          </div>
 
-      <SubmitButton>{submitLabel}</SubmitButton>
+          {mode === "remove" ? (
+            <div className="space-y-2">
+              <label className="label" htmlFor="reason">
+                Причина расхода
+              </label>
+              <select className="field" id="reason" name="reason" required>
+                {reasonOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          {mode === "remove" ? (
+            <div className="space-y-2">
+              <label className="label" htmlFor="reference">
+                Номер поставки или заказа
+              </label>
+              <input
+                className="field"
+                id="reference"
+                name="reference"
+                placeholder="Необязательно"
+                type="text"
+              />
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <label className="label" htmlFor="comment">
+              {copy.comment}
+            </label>
+            <textarea
+              className="field min-h-24 resize-y"
+              id="comment"
+              name="comment"
+              placeholder="Необязательно"
+            />
+          </div>
+
+          {state.message ? (
+            <div
+              className={clsx(
+                "rounded-lg border p-3 text-sm",
+                state.status === "success" &&
+                  "border-emerald-200 bg-emerald-50 text-emerald-900",
+                state.status === "warning" &&
+                  "border-amber-200 bg-amber-50 text-amber-900",
+                state.status === "error" &&
+                  "border-red-200 bg-red-50 text-red-900"
+              )}
+            >
+              <div>{state.message}</div>
+              {state.correctionUrl ? (
+                <Link
+                  className="mt-3 inline-flex font-semibold text-amber-950 underline"
+                  href={state.correctionUrl}
+                >
+                  Открыть коррекцию
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+
+          <SubmitButton>{submitLabel}</SubmitButton>
+        </>
+      ) : null}
     </form>
   );
 }

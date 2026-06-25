@@ -24,6 +24,7 @@ type ProductPickerProps = {
   placeholder?: string;
   initialProductId?: string;
   showStock?: boolean;
+  allowChangeSelection?: boolean;
   createProductReturnTo?: ProductReturnTarget;
   onChange?: (product: ProductForPicker | null) => void;
 };
@@ -202,6 +203,7 @@ export function ProductPicker({
   placeholder = "Название, SKU, offer ID, штрихкод или категория",
   initialProductId,
   showStock = true,
+  allowChangeSelection = false,
   createProductReturnTo = "products",
   onChange
 }: ProductPickerProps) {
@@ -210,6 +212,7 @@ export function ProductPicker({
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanError, setScanError] = useState("");
   const [unknownScannedBarcode, setUnknownScannedBarcode] = useState("");
+  const queryInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<ScannerControls | null>(null);
 
@@ -244,6 +247,14 @@ export function ProductPicker({
     setSelectedId(product.id);
     setQuery(product.name);
     setUnknownScannedBarcode("");
+  }, []);
+
+  const clearSelectedProduct = useCallback(() => {
+    setSelectedId("");
+    setQuery("");
+    setUnknownScannedBarcode("");
+    setScanError("");
+    window.setTimeout(() => queryInputRef.current?.focus(), 0);
   }, []);
 
   const handleScannedCode = useCallback((rawCode: string) => {
@@ -341,6 +352,7 @@ export function ProductPicker({
             id={`${name}-query`}
             inputMode="search"
             placeholder={placeholder}
+            ref={queryInputRef}
             type="search"
             value={query}
             onChange={(event) => {
@@ -385,6 +397,15 @@ export function ProductPicker({
                 <div className="mt-2 text-sm font-semibold text-slate-700">
                   Остаток: {selectedProduct.stock} шт.
                 </div>
+              ) : null}
+              {allowChangeSelection ? (
+                <button
+                  className="mt-3 inline-flex rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-accent active:scale-[0.99]"
+                  type="button"
+                  onClick={clearSelectedProduct}
+                >
+                  ← Выбрать другой товар
+                </button>
               ) : null}
             </div>
           </div>
