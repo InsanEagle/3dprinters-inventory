@@ -7,6 +7,7 @@ import { getProductMovementsAction } from "@/app/actions/stock";
 import { getKindLabel, getReasonLabel } from "@/lib/reasons";
 import type { ProductForPicker } from "@/lib/product-types";
 import { ProductPicker } from "@/components/ProductPicker";
+import { ProductThumbnail } from "@/components/ProductThumbnail";
 
 type ProductMovementPreview = {
   id: string;
@@ -98,7 +99,21 @@ export function CheckStockPanel({
 
       {selectedProduct ? (
         <div className="rounded-lg bg-ink p-5 text-white shadow-soft">
-          <div className="text-sm text-blue-100">Текущий расчетный остаток</div>
+          <div className="flex min-w-0 items-center gap-3">
+            <ProductThumbnail
+              className="bg-slate-700 text-blue-100"
+              imageUrl={selectedProduct.imageUrl}
+              name={selectedProduct.name}
+            />
+            <div className="min-w-0">
+              <div className="text-sm text-blue-100">
+                Текущий расчетный остаток
+              </div>
+              <div className="mt-1 font-semibold text-white">
+                {selectedProduct.name}
+              </div>
+            </div>
+          </div>
           <div className="mt-2 text-5xl font-bold">
             {selectedProduct.stock}
           </div>

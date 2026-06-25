@@ -48,6 +48,7 @@ export async function createProductAction(
   const internalSku = cleanText(formData.get("internalSku"));
   const ozonOfferId = cleanText(formData.get("ozonOfferId"));
   const category = cleanText(formData.get("category"));
+  const imageUrl = cleanText(formData.get("imageUrl"));
   const searchAliases = cleanText(formData.get("searchAliases"));
   const isFavorite = parseBoolean(formData.get("isFavorite"));
   const returnTo =
@@ -96,6 +97,7 @@ export async function createProductAction(
         internalSku,
         ozonOfferId: ozonOfferId || null,
         category,
+        imageUrl: imageUrl || null,
         searchAliases,
         isFavorite,
         barcodes: {

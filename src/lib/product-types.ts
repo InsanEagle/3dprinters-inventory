@@ -4,6 +4,7 @@ export type ProductForPicker = {
   internalSku: string;
   ozonOfferId: string | null;
   category: string;
+  imageUrl: string | null;
   searchAliases: string;
   isFavorite: boolean;
   stock: number;

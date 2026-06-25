@@ -90,10 +90,23 @@ export function ProductForm({
 
       <details className="rounded-lg border border-slate-200 bg-slate-50 p-3">
         <summary className="cursor-pointer text-sm font-semibold text-slate-700">
-          Ozon offer ID и алиасы
+          Фото, Ozon offer ID и алиасы
         </summary>
 
         <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <label className="label" htmlFor="imageUrl">
+              Фото товара / ссылка на фото
+            </label>
+            <input
+              className="field"
+              id="imageUrl"
+              name="imageUrl"
+              placeholder="Необязательно"
+              type="text"
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="label" htmlFor="ozonOfferId">
               Ozon offer ID

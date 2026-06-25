@@ -17,6 +17,7 @@ function toPickerProduct(product: ProductRecord, stock: number): ProductForPicke
     internalSku: product.internalSku,
     ozonOfferId: product.ozonOfferId,
     category: product.category,
+    imageUrl: product.imageUrl,
     searchAliases: product.searchAliases,
     isFavorite: product.isFavorite,
     stock,
