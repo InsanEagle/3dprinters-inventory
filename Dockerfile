@@ -18,6 +18,9 @@ FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL=file:./build.db
+ENV AUTH_SECRET=build-only-dummy-auth-secret
+ENV PIN_HASH_SECRET=build-only-dummy-pin-hash-secret
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

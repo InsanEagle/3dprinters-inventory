@@ -43,6 +43,8 @@ openssl rand -base64 32
 docker compose --env-file .env.production build
 ```
 
+Во время сборки Docker использует безопасные dummy-значения `AUTH_SECRET` и `PIN_HASH_SECRET`, чтобы Next.js мог собрать страницы. Настоящие секреты не нужно передавать в build args: они задаются только в `.env.production` и используются контейнером при запуске.
+
 ## 3. Подготовить базу
 
 Перед первым запуском и после обновлений с миграциями:
