@@ -95,6 +95,16 @@ curl -I http://127.0.0.1:3001/login
 
 Ожидаемый результат: HTTP-ответ без ошибки соединения.
 
+Если в логах появилась ошибка Prisma про `debian-openssl-3.0.x`, пересоберите образ без старого кеша и снова примените миграции:
+
+```bash
+docker compose --env-file .env.production build --no-cache
+docker compose --env-file .env.production run --rm inventory npm run prisma:deploy
+docker compose --env-file .env.production up -d
+```
+
+В образе для `node:22-bookworm-slim` Prisma Client должен быть сгенерирован с query engine для `debian-openssl-3.0.x`.
+
 ## 6. Пример reverse proxy через Nginx
 
 Пример для поддомена `inventory.example.com`:

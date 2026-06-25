@@ -22,6 +22,10 @@ ENV DATABASE_URL=file:./build.db
 ENV AUTH_SECRET=build-only-dummy-auth-secret
 ENV PIN_HASH_SECRET=build-only-dummy-pin-hash-secret
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
