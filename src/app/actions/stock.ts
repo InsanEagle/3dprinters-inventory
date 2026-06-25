@@ -1,6 +1,6 @@
 "use server";
 
-import { MovementKind, MovementReason } from "@prisma/client";
+import { MovementKind, MovementReason, type Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireEmployee } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -58,6 +58,111 @@ const removeReasons = new Set<MovementReason>([
   MovementReason.OTHER
 ]);
 
+type AtomicRemoveStockResult =
+  | {
+      status: "removed";
+      productName: string;
+    }
+  | {
+      status: "insufficient";
+      stock: number;
+    }
+  | {
+      status: "missing";
+    };
+
+type LockedProductRow = {
+  name: string;
+};
+
+async function lockProductForStockChange(
+  tx: Prisma.TransactionClient,
+  productId: string
+) {
+  const rows = await tx.$queryRaw<LockedProductRow[]>`
+    UPDATE "Product"
+    SET "updated_at" = "updated_at"
+    WHERE "id" = ${productId}
+    RETURNING "name"
+  `;
+
+  return rows[0] ?? null;
+}
+
+async function removeStockAtomically({
+  productId,
+  employeeId,
+  quantity,
+  reason,
+  comment,
+  reference
+}: {
+  productId: string;
+  employeeId: string;
+  quantity: number;
+  reason: MovementReason;
+  comment: string | null;
+  reference: string | null;
+}): Promise<AtomicRemoveStockResult> {
+  return prisma.$transaction(async (tx) => {
+    // SQLite serializes writers. This no-op update starts a write transaction
+    // before the stock check, so concurrent removals for the same product queue.
+    const product = await lockProductForStockChange(tx, productId);
+
+    if (!product) {
+      return {
+        status: "missing"
+      };
+    }
+
+    const stockResult = await tx.stockMovement.aggregate({
+      where: {
+        productId
+      },
+      _sum: {
+        quantityDelta: true
+      }
+    });
+    const stock = stockResult._sum.quantityDelta ?? 0;
+
+    if (stock < quantity) {
+      return {
+        status: "insufficient",
+        stock
+      };
+    }
+
+    const supply =
+      reason === MovementReason.OZON_SUPPLY
+        ? await tx.supply.create({
+            data: {
+              productId,
+              destination: "Ozon FBO",
+              reference,
+              comment
+            }
+          })
+        : null;
+
+    await tx.stockMovement.create({
+      data: {
+        productId,
+        employeeId,
+        supplyId: supply?.id,
+        kind: MovementKind.REMOVE,
+        quantityDelta: -quantity,
+        reason,
+        comment
+      }
+    });
+
+    return {
+      status: "removed",
+      productName: product.name
+    };
+  });
+}
+
 export async function addStockAction(
   _previousState: StockActionState,
   formData: FormData
@@ -109,65 +214,38 @@ export async function removeStockAction(
     };
   }
 
-  const [stock, product] = await Promise.all([
-    getCurrentStock(productId),
-    prisma.product.findUnique({
-      where: {
-        id: productId
-      },
-      select: {
-        name: true
-      }
-    })
-  ]);
+  const comment = cleanComment(formData.get("comment"));
+  const reference = cleanComment(formData.get("reference"));
 
-  if (!product) {
+  const result = await removeStockAtomically({
+    productId,
+    employeeId: employee.id,
+    quantity,
+    reason,
+    comment,
+    reference
+  });
+
+  if (result.status === "missing") {
     return {
       status: "error",
       message: "Товар не найден."
     };
   }
 
-  if (stock < quantity) {
+  if (result.status === "insufficient") {
     return {
       status: "warning",
-      message: `Недостаточно товара. Сейчас доступно ${stock} шт., списать нужно ${quantity} шт.`,
+      message: `Недостаточно товара. Сейчас доступно ${result.stock} шт., списать нужно ${quantity} шт.`,
       correctionUrl: `/stock/correction?productId=${encodeURIComponent(productId)}`
     };
   }
-
-  const comment = cleanComment(formData.get("comment"));
-  const reference = cleanComment(formData.get("reference"));
-
-  const supply =
-    reason === MovementReason.OZON_SUPPLY
-      ? await prisma.supply.create({
-          data: {
-            productId,
-            destination: "Ozon FBO",
-            reference,
-            comment
-          }
-        })
-      : null;
-
-  await prisma.stockMovement.create({
-    data: {
-      productId,
-      employeeId: employee.id,
-      supplyId: supply?.id,
-      kind: MovementKind.REMOVE,
-      quantityDelta: -quantity,
-      reason,
-      comment
-    }
-  });
 
   refreshInventoryPages();
 
   return {
     status: "success",
-    message: `${product.name}: списано ${quantity} шт.`
+    message: `${result.productName}: списано ${quantity} шт.`
   };
 }
 
